@@ -1,0 +1,37 @@
+version: "3.9"
+networks:
+  proxynet:
+    driver: bridge
+services:
+  web:
+    build: .
+    ports:
+      - "80:80"
+    depends_on:
+      - postgres
+    networks:
+      - proxynet
+  flyway:
+    image: boxfuse/flyway:5-alpine
+    command: -url=jdbc:postgresql://postgres:5432/dapper_test -schemas=public -user=postgres -password=P@ssw0rd migrate
+    volumes:
+      - .:/flyway/sql
+    restart: on-failure
+    networks:
+      - proxynet
+  postgres:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=P@ssw0rd
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=dapper_test
+    volumes:
+      - pg_project:/data
+    ports:
+      - "5432:5432"
+    networks:
+      - proxynet
+volumes:
+  pg_project: {}
+  
